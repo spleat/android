@@ -43,6 +43,10 @@ dependencies {
     implementation "com.github.elpassion.android-commons:shared-preferences-gson-converter-adapter:$android_commons_version"
 
     implementation 'org.web3j:core:3.1.1-android'
+    implementation 'com.trello.rxlifecycle2:rxlifecycle-kotlin:2.2.1'
+    implementation 'com.trello.rxlifecycle2:rxlifecycle-android-lifecycle-kotlin:2.2.1'
+    implementation 'com.trello.rxlifecycle2:rxlifecycle-components:2.2.1'
+
     implementation group: 'com.squareup.retrofit2', name: 'adapter-rxjava2', version: retrofit_version
     implementation group: 'io.reactivex.rxjava2', name: 'rxjava', version: rxjava2_version
     implementation group: 'io.reactivex.rxjava2', name: 'rxandroid', version: rx_android_version
