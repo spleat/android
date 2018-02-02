@@ -20,6 +20,7 @@ import java.math.BigInteger
 
 class MenuActivity : RxAppCompatActivity() {
 
+    private val orderId by lazy { intent.getStringExtra(ORDER_ID_KEY) }
     private val menuService: EtherPizzaService by lazy(etherPizzaServiceProvider)
     private val menuAdapter = basicAdapterWithLayoutAndBinder(
             items = emptyList<MenuItem>(),
@@ -34,6 +35,7 @@ class MenuActivity : RxAppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.menu_activity)
+        orderIdView.text = orderId
         menuListRecycler.layoutManager = LinearLayoutManager(this, LinearLayout.VERTICAL, false)
         currentOrderRecycler.layoutManager = LinearLayoutManager(this, LinearLayout.VERTICAL, false)
         menuService.executeRx { menuLength().sendAsync() }
@@ -62,9 +64,12 @@ class MenuActivity : RxAppCompatActivity() {
 
 
     companion object {
-        fun start(context: Context) {
-            context.startActivity(Intent(context, MenuActivity::class.java))
+        fun start(context: Context, orderId: String) {
+            context.startActivity(Intent(context, MenuActivity::class.java)
+                    .putExtra(ORDER_ID_KEY, orderId))
         }
+
+        private const val ORDER_ID_KEY = "orderId"
     }
 }
 
@@ -75,4 +80,4 @@ data class MenuItem(
 )
 
 fun BigInteger.toEth(): BigDecimal =
-        toBigDecimal(scale = 2).div(BigDecimal.valueOf(Math.pow(10.0, 18.0).toLong()))
+        toBigDecimal().setScale(6).div(BigDecimal("1e18"))
