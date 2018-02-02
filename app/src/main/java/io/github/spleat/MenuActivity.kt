@@ -11,16 +11,22 @@ import com.elpassion.android.view.hide
 import com.elpassion.android.view.show
 import com.trello.rxlifecycle2.components.support.RxAppCompatActivity
 import com.trello.rxlifecycle2.kotlin.bindToLifecycle
+import io.reactivex.Flowable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.menu_activity.*
 import kotlinx.android.synthetic.main.menu_item_layout.view.*
+import org.web3j.abi.datatypes.Address
+import org.web3j.abi.datatypes.generated.Uint256
+import org.web3j.tuples.generated.Tuple3
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.util.concurrent.TimeUnit
 
 class MenuActivity : RxAppCompatActivity() {
 
     private val orderId by lazy { intent.getStringExtra(ORDER_ID_KEY) }
+    private val walletManager by lazy(walletManagerProvider)
     private val menuService: EtherPizzaService by lazy(etherPizzaServiceProvider)
     private val spleatService by lazy(spleatServiceProvider)
     private val menuAdapter = basicAdapterWithLayoutAndBinder(
@@ -31,17 +37,31 @@ class MenuActivity : RxAppCompatActivity() {
                     menuItemDescription.text = item.description
                     menuItemPrice.text = item.price.toEth().toPlainString()
                     menuItemAdd.setOnClickListener {
-                        spleatService.executeRx { addItem(BigInteger(orderId, 16), item.id, item.price).sendAsync() }
+                        spleatService.executeRx { addItem(orderId.toUint256(), item.id, item.price).sendAsync() }
                                 .subscribeOn(Schedulers.io())
                                 .observeOn(AndroidSchedulers.mainThread())
                                 .doOnSubscribe { progressBar.show() }
                                 .doFinally { progressBar.hide() }
                                 .bindToLifecycle(this@MenuActivity)
                                 .subscribe({
-
+                                    Log.e("kasper", "item dodany")
                                 }, {
                                     Log.e("kasper", it.toString(), it)
                                 })
+                    }
+                }
+            })
+    private val currentOrderAdapter = basicAdapterWithLayoutAndBinder(
+            items = emptyList<OwnerableMenuItem>(),
+            layout = R.layout.menu_item_layout,
+            binder = { holder, item ->
+                with(holder.itemView) {
+                    menuItemDescription.text = item.menuItem.description
+                    menuItemPrice.text = item.menuItem.price.toEth().toPlainString()
+                    if (item.owner.toString() == walletManager.getWallet().address) {
+                        setBackgroundColor(resources.getColor(R.color.background_material_dark))
+                    } else {
+                        setBackgroundColor(resources.getColor(R.color.background_material_light))
                     }
                 }
             })
@@ -50,6 +70,8 @@ class MenuActivity : RxAppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.menu_activity)
         orderIdView.text = orderId
+        Log.e("kasper", "orderId: $orderId")
+        currentOrderRecycler.adapter = currentOrderAdapter
         menuListRecycler.layoutManager = LinearLayoutManager(this, LinearLayout.VERTICAL, false)
         currentOrderRecycler.layoutManager = LinearLayoutManager(this, LinearLayout.VERTICAL, false)
         menuService.executeRx { menuLength().sendAsync() }
@@ -74,7 +96,29 @@ class MenuActivity : RxAppCompatActivity() {
                     Log.e("kasper", it.toString(), it)
                 })
         menuListRecycler.adapter = menuAdapter
+
+        Flowable.interval(5, TimeUnit.SECONDS)
+                .subscribeOn(Schedulers.io())
+                .onBackpressureDrop()
+                .toObservable()
+                .flatMap { spleatService.executeRx { orderById(orderId.toUint256()).sendAsync() } }
+                .map { a: Tuple3<MutableList<BigInteger>, MutableList<String>, Boolean> ->
+                    val cos = a as Tuple3<MutableList<Uint256>, MutableList<Address>, Boolean>
+                    cos.value1.zip(cos.value2).map { i -> OwnerableMenuItem(i.second, menuAdapter.items.single { Uint256(it.id) == i.first }) }
+                }
+                .observeOn(AndroidSchedulers.mainThread())
+                .bindToLifecycle(this)
+                .subscribe({
+                    Log.e("kasper", "ok $it")
+                    currentOrderAdapter.items = it
+                    currentOrderAdapter.notifyDataSetChanged()
+                }, {
+                    Log.e("kasper", it.toString(), it)
+
+                })
     }
+
+    private fun String.toUint256() = BigInteger(this.drop(2), 16)
 
 
     companion object {
@@ -91,6 +135,11 @@ data class MenuItem(
         val id: BigInteger,
         val description: String,
         val price: BigInteger
+)
+
+data class OwnerableMenuItem(
+        val owner: Address,
+        val menuItem: MenuItem
 )
 
 fun BigInteger.toEth(): BigDecimal =
