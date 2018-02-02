@@ -10,6 +10,7 @@ class SpleatApplication : Application() {
         super.onCreate()
         contextProvider = { applicationContext }
         val walletManager = WalletManager(applicationContext)
+        walletManagerProvider = { walletManager }
         etherPizzaServiceProvider = { EtherPizzaService(walletManager) }
     }
 }
@@ -17,3 +18,4 @@ class SpleatApplication : Application() {
 var contextProvider: () -> Context = { TODO() }
 val gsonProvider by lazy { Gson() }
 var etherPizzaServiceProvider: () -> EtherPizzaService = { TODO() }
+var walletManagerProvider: () -> WalletManager = { TODO() }

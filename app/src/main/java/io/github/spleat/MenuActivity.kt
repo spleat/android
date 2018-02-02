@@ -8,13 +8,17 @@ import android.support.v7.widget.LinearLayoutManager
 import android.util.Log
 import android.widget.LinearLayout
 import com.elpassion.android.commons.recycler.adapters.basicAdapterWithLayoutAndBinder
+import com.elpassion.android.view.hide
+import com.elpassion.android.view.show
+import com.trello.rxlifecycle2.components.support.RxAppCompatActivity
+import com.trello.rxlifecycle2.kotlin.bindToLifecycle
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.menu_activity.*
 import kotlinx.android.synthetic.main.menu_item_layout.view.*
 import java.math.BigInteger
 
-class MenuActivity : AppCompatActivity() {
+class MenuActivity : RxAppCompatActivity() {
 
     private val menuService: EtherPizzaService by lazy(etherPizzaServiceProvider)
     private val menuAdapter = basicAdapterWithLayoutAndBinder(
@@ -31,15 +35,22 @@ class MenuActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.menu_activity)
         menuListRecycler.layoutManager = LinearLayoutManager(this, LinearLayout.VERTICAL, false)
-
+        currentOrderRecycler.layoutManager = LinearLayoutManager(this, LinearLayout.VERTICAL, false)
         menuService.executeRx { menuLength().sendAsync() }
                 .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
                 .flatMapIterable { (0..(it.toLong() - 1)).toList() }
-                .doOnNext { Log.e("kasper","calling $it")}
+                .doOnNext { Log.e("kasper", "calling $it") }
                 .flatMap { menuService.executeRx { menuItem(BigInteger.valueOf(it)).sendAsync() } }
                 .map { MenuItem(it.value1.toString(), it.value2.toString(), it.value3.toString()) }
                 .toList()
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe {
+                    progressBar.show()
+                }
+                .doFinally {
+                    progressBar.hide()
+                }
+                .bindToLifecycle(this)
                 .subscribe({
                     menuAdapter.items = it
                     menuAdapter.notifyDataSetChanged()
