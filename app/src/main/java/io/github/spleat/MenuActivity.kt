@@ -3,7 +3,6 @@ package io.github.spleat
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.util.Log
 import android.widget.LinearLayout
@@ -27,7 +26,7 @@ class MenuActivity : RxAppCompatActivity() {
             binder = { holder, item ->
                 with(holder.itemView) {
                     menuItemDescription.text = item.description
-                    menuItemPrice.text = item.price
+                    menuItemPrice.text = item.price.toString()
                 }
             })
 
@@ -41,7 +40,7 @@ class MenuActivity : RxAppCompatActivity() {
                 .flatMapIterable { (0..(it.toLong() - 1)).toList() }
                 .doOnNext { Log.e("kasper", "calling $it") }
                 .flatMap { menuService.executeRx { menuItem(BigInteger.valueOf(it)).sendAsync() } }
-                .map { MenuItem(it.value1.toString(), it.value2.toString(), it.value3.toString()) }
+                .map { MenuItem(it.value1.toString(), it.value2.toString(), it.value3.div(BigInteger.valueOf(Math.pow(10.0, 17.0).toLong()))) }
                 .toList()
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe {
@@ -70,5 +69,5 @@ class MenuActivity : RxAppCompatActivity() {
 data class MenuItem(
         val id: String,
         val description: String,
-        val price: String
+        val price: BigInteger
 )
