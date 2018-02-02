@@ -9,8 +9,11 @@ class SpleatApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         contextProvider = { applicationContext }
+        val walletManager = WalletManager(applicationContext)
+        etherPizzaServiceProvider = { EtherPizzaService(walletManager) }
     }
 }
 
 var contextProvider: () -> Context = { TODO() }
 val gsonProvider by lazy { Gson() }
+var etherPizzaServiceProvider: () -> EtherPizzaService = { TODO() }

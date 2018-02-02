@@ -21,11 +21,15 @@ class WalletManager(
             credentialsVault.mkdir()
         }
         if (walletFileName == null) {
+            Log.e("kasper","createing wallet")
             val fullNewWalletFile = WalletUtils.generateLightNewWalletFile("password", credentialsVault)
             walletFileName = fullNewWalletFile
             Log.e("kasper", "walletManager created $fullNewWalletFile")
         }
-        return WalletUtils.loadCredentials("password", File(credentialsVault, walletFileName))
+
+        return WalletUtils.loadCredentials("password", File(credentialsVault, walletFileName)).also {
+            Log.e("kasper","myAddress ${it.address}")
+        }
     }
 }
 
