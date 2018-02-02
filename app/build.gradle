@@ -13,7 +13,7 @@ buildscript {
 android {
     compileSdkVersion 27
     defaultConfig {
-        applicationId "github.io.spleat"
+        applicationId "io.github.spleat"
         minSdkVersion 21
         targetSdkVersion 27
         versionCode 1

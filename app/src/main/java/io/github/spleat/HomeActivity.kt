@@ -1,4 +1,4 @@
-package github.io.spleat
+package io.github.spleat
 
 import android.support.v7.app.AppCompatActivity
 
