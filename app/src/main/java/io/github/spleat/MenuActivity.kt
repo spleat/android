@@ -22,13 +22,27 @@ class MenuActivity : RxAppCompatActivity() {
 
     private val orderId by lazy { intent.getStringExtra(ORDER_ID_KEY) }
     private val menuService: EtherPizzaService by lazy(etherPizzaServiceProvider)
+    private val spleatService by lazy(spleatServiceProvider)
     private val menuAdapter = basicAdapterWithLayoutAndBinder(
             items = emptyList<MenuItem>(),
             layout = R.layout.menu_item_layout,
             binder = { holder, item ->
                 with(holder.itemView) {
                     menuItemDescription.text = item.description
-                    menuItemPrice.text = item.price.toString()
+                    menuItemPrice.text = item.price.toEth().toPlainString()
+                    menuItemAdd.setOnClickListener {
+                        spleatService.executeRx { addItem(BigInteger(orderId, 16), item.id, item.price).sendAsync() }
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .doOnSubscribe { progressBar.show() }
+                                .doFinally { progressBar.hide() }
+                                .bindToLifecycle(this@MenuActivity)
+                                .subscribe({
+
+                                }, {
+                                    Log.e("kasper", it.toString(), it)
+                                })
+                    }
                 }
             })
 
@@ -43,7 +57,7 @@ class MenuActivity : RxAppCompatActivity() {
                 .flatMapIterable { (0..(it.toLong() - 1)).toList() }
                 .doOnNext { Log.e("kasper", "calling $it") }
                 .flatMap { menuService.executeRx { menuItem(BigInteger.valueOf(it)).sendAsync() } }
-                .map { MenuItem(it.value1.toString(), it.value2.toString(), it.value3.toEth()) }
+                .map { MenuItem(it.value1, it.value2.toString(), it.value3) }
                 .toList()
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe {
@@ -74,9 +88,9 @@ class MenuActivity : RxAppCompatActivity() {
 }
 
 data class MenuItem(
-        val id: String,
+        val id: BigInteger,
         val description: String,
-        val price: BigDecimal
+        val price: BigInteger
 )
 
 fun BigInteger.toEth(): BigDecimal =
