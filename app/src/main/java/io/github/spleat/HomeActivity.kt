@@ -26,7 +26,7 @@ class HomeActivity : RxAppCompatActivity() {
                 .observeOn(AndroidSchedulers.mainThread())
                 .bindToLifecycle(this)
                 .subscribe({
-                    balance.text = it.toString().dropLast(18)
+                    balance.text = it.toEth().toPlainString()
                     address.setText("Powstańców Śląskich 7b, 53-332 Wrocław")
                 }, {
                     Log.e("kasper", it.toString(), it)
