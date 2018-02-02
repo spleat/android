@@ -6,8 +6,8 @@ buildscript {
     ext.rxjava2_version = '2.1.1'
     ext.retrofit_version = '2.2.0'
     ext.rx_android_version = '2.0.1'
-    ext.android_commons_version = '0.0.21'
-    ext.android_support = '27.0.1'
+    ext.android_commons_version = '0.0.23'
+    ext.android_support = '27.0.2'
 }
 
 android {
@@ -38,8 +38,9 @@ dependencies {
     implementation "com.android.support:appcompat-v7:$android_support"
     implementation "com.android.support:recyclerview-v7:$android_support"
     implementation "com.android.support:design:$android_support"
-    implementation "com.elpassion.android.commons:shared-preferences:$android_commons_version"
-    implementation "com.elpassion.android.commons:shared-preferences-gson-converter-adapter:$android_commons_version"
+    implementation "com.github.elpassion.android-commons:shared-preferences:$android_commons_version"
+    implementation "com.github.elpassion.android-commons:recycler:$android_commons_version"
+    implementation "com.github.elpassion.android-commons:shared-preferences-gson-converter-adapter:$android_commons_version"
 
     implementation 'org.web3j:core:3.1.1-android'
     implementation group: 'com.squareup.retrofit2', name: 'adapter-rxjava2', version: retrofit_version
@@ -48,9 +49,6 @@ dependencies {
     implementation group: 'com.squareup.okhttp3', name: 'logging-interceptor', version: '3.8.1'
     implementation group: 'com.squareup.retrofit2', name: 'converter-gson', version: retrofit_version
     implementation 'com.google.code.gson:gson:2.8.1'
-    implementation("com.elpassion.android.commons:recycler:$android_commons_version") {
-        exclude group: "com.android.support"
-    }
 }
 
 task regenerateSolc(type:Exec) {
@@ -70,3 +68,6 @@ tasks.whenTaskAdded { task ->
     }
 }
 
+repositories {
+    maven { url "https://jitpack.io" }
+}
