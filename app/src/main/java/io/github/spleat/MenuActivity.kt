@@ -90,7 +90,7 @@ class MenuActivity : RxAppCompatActivity() {
         fetchMenuItems()
         subscribeToCurrentOrderChanges()
         closeOrder.setOnClickListener {
-            closeOrderAndSubscribeToStatusChanges()
+            closeOrder()
         }
     }
 
@@ -101,20 +101,35 @@ class MenuActivity : RxAppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    private fun closeOrderAndSubscribeToStatusChanges() {
+    private fun closeOrder() {
         spleatService.executeRx { makeOrder(orderId.toUint256()).sendAsync() }
                 .subscribeOn(Schedulers.io())
-                .flatMap { Observable.interval(2, TimeUnit.SECONDS) }
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe {
+                    progressBar.show()
+                    closeOrder.hide()
+                }
+                .bindToLifecycle(this)
+                .subscribe({
+                    progressBar.hide()
+                }, {
+                    Log.e("kasper", "123123")
+                })
+    }
+
+    private fun subscribeStatusCHanges() {
+        Observable.interval(2, TimeUnit.SECONDS)
+                .subscribeOn(Schedulers.io())
                 .toFlowable(BackpressureStrategy.DROP)
                 .toObservable()
                 .flatMap { spleatService.executeRx { restaurantOrderStatus(orderId.toUint256()).sendAsync() } }
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe { progressBar.show() }
+                .doOnSubscribe {
+                    statusView.show()
+                    statusView.text = "pending"
+                }
                 .bindToLifecycle(this)
                 .subscribe({
-                    progressBar.hide()
-                    closeOrder.hide()
-                    statusView.show()
                     statusView.text = when (it.toInt()) {
                         0 -> "pending"
                         1 -> "preparing"
@@ -133,16 +148,19 @@ class MenuActivity : RxAppCompatActivity() {
                 .onBackpressureDrop()
                 .toObservable()
                 .flatMap { spleatService.executeRx { orderById(orderId.toUint256()).sendAsync() } }
-                .map { a: Tuple4<MutableList<BigInteger>, MutableList<String>, Boolean, String> ->
-                    try {
-                        val cos = a as Tuple4<MutableList<Uint256>, MutableList<Address>, Boolean, String>
-                        val isOwner = cos.value4 == myAddress && cos.value1.isNotEmpty()
-                        cos.value1.zip(cos.value2).map { i -> OwnerableMenuItem(i.second, menuAdapter.items.single { Uint256(it.id) == i.first }) } to isOwner
-                    } catch (ex: Exception) {
-                        emptyList<OwnerableMenuItem>() to false
+                .publish {
+                    it.map { it.value3 }.distinctUntilChanged().filter { it }.subscribe { subscribeStatusCHanges() }
+                    it.map { a: Tuple4<MutableList<BigInteger>, MutableList<String>, Boolean, String> ->
+                        try {
+                            val cos = a as Tuple4<MutableList<Uint256>, MutableList<Address>, Boolean, String>
+                            val isOwner = cos.value4 == myAddress && cos.value1.isNotEmpty() && !cos.value3
+                            cos.value1.zip(cos.value2).map { i -> OwnerableMenuItem(i.second, menuAdapter.items.single { Uint256(it.id) == i.first }) } to isOwner
+                        } catch (ex: Exception) {
+                            emptyList<OwnerableMenuItem>() to false
+                        }
                     }
+                            .distinctUntilChanged()
                 }
-                .distinctUntilChanged()
                 .observeOn(AndroidSchedulers.mainThread())
                 .bindToLifecycle(this)
                 .subscribe({ (it, isOwner) ->
