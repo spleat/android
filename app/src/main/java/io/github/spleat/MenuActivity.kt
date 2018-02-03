@@ -55,7 +55,7 @@ class MenuActivity : RxAppCompatActivity() {
             })
     private val currentOrderAdapter = basicAdapterWithLayoutAndBinder(
             items = emptyList<OwnerableMenuItem>(),
-            layout = R.layout.menu_item_layout,
+            layout = R.layout.current_item_layout,
             binder = { holder, item ->
                 with(holder.itemView) {
                     menuItemDescription.text = item.menuItem.description
