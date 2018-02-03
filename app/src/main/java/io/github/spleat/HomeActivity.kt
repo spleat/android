@@ -31,7 +31,7 @@ class HomeActivity : RxAppCompatActivity() {
                     .doFinally { progressBar.hide() }
                     .bindToLifecycle(this)
                     .subscribe({
-                        MenuActivity.start(this, it.logs[0].topics[1], address)
+                        MenuActivity.start(this, it.logs[0].topics[1].toUint256(), address)
                     }, {
                         Log.e("kasper", it.toString(), it)
                     })

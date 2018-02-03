@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit
 
 class MenuActivity : RxAppCompatActivity() {
 
-    private val orderId by lazy { intent.getStringExtra(ORDER_ID_KEY) ?: intent.data.path }
+    private val orderId by lazy { intent.getSerializableExtra(ORDER_ID_KEY) as BigInteger? ?: BigInteger(intent.data.path.substringAfterLast("/")) }
     private val walletManager by lazy(walletManagerProvider)
     private val menuService: EtherPizzaService by lazy(etherPizzaServiceProvider)
     private val spleatService by lazy(spleatServiceProvider)
@@ -78,9 +78,9 @@ class MenuActivity : RxAppCompatActivity() {
         shareOrder.setOnClickListener {
             val sendIntent = Intent()
             sendIntent.action = Intent.ACTION_SEND
-            sendIntent.putExtra(Intent.EXTRA_TEXT, "http://sple.at/$orderId")
+            sendIntent.putExtra(Intent.EXTRA_TEXT, "https://sple.at/order/$orderId")
             sendIntent.type = "text/plain"
-            startActivity(Intent.createChooser(sendIntent, "http://sple.at/$orderId"))
+            startActivity(Intent.createChooser(sendIntent, "https://sple.at/order/$orderId"))
         }
         Log.e("kasper", "orderId: $orderId")
         currentOrderRecycler.adapter = currentOrderAdapter
@@ -102,7 +102,7 @@ class MenuActivity : RxAppCompatActivity() {
     }
 
     private fun closeOrder() {
-        spleatService.executeRx { makeOrder(orderId.toUint256()).sendAsync() }
+        spleatService.executeRx { makeOrder(orderId).sendAsync() }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe {
@@ -122,7 +122,7 @@ class MenuActivity : RxAppCompatActivity() {
                 .subscribeOn(Schedulers.io())
                 .toFlowable(BackpressureStrategy.DROP)
                 .toObservable()
-                .flatMap { spleatService.executeRx { restaurantOrderStatus(orderId.toUint256()).sendAsync() } }
+                .flatMap { spleatService.executeRx { restaurantOrderStatus(orderId).sendAsync() } }
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe {
                     statusView.show()
@@ -147,7 +147,7 @@ class MenuActivity : RxAppCompatActivity() {
                 .subscribeOn(Schedulers.io())
                 .onBackpressureDrop()
                 .toObservable()
-                .flatMap { spleatService.executeRx { orderById(orderId.toUint256()).sendAsync() } }
+                .flatMap { spleatService.executeRx { orderById(orderId).sendAsync() } }
                 .publish {
                     it.map { it.value3 }.distinctUntilChanged().filter { it }.subscribe { subscribeStatusCHanges() }
                     it.map { a: Tuple4<MutableList<BigInteger>, MutableList<String>, Boolean, String> ->
@@ -203,10 +203,8 @@ class MenuActivity : RxAppCompatActivity() {
                 })
     }
 
-    private fun String.toUint256() = BigInteger(this.substringAfterLast("0x").substringAfterLast("/"), 16)
-
     private fun addMenuItem(item: MenuItem) {
-        spleatService.executeRx { addItem(orderId.toUint256(), item.id, item.price).sendAsync() }
+        spleatService.executeRx { addItem(orderId, item.id, item.price).sendAsync() }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe { progressBar.show() }
@@ -220,7 +218,7 @@ class MenuActivity : RxAppCompatActivity() {
     }
 
     private fun removeMenuItem(item: MenuItem) {
-        spleatService.executeRx { removeItem(orderId.toUint256(), item.id).sendAsync() }
+        spleatService.executeRx { removeItem(orderId, item.id).sendAsync() }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe { progressBar.show() }
@@ -234,7 +232,7 @@ class MenuActivity : RxAppCompatActivity() {
     }
 
     companion object {
-        fun start(context: Context, orderId: String, address: String) {
+        fun start(context: Context, orderId: BigInteger, address: String) {
             context.startActivity(Intent(context, MenuActivity::class.java)
                     .putExtra(ORDER_ID_KEY, orderId)
                     .putExtra(ADDRESS_KEY, address))
@@ -258,3 +256,6 @@ data class OwnerableMenuItem(
 
 fun BigInteger.toEth(): BigDecimal =
         toBigDecimal().setScale(6).div(BigDecimal("1e18"))
+
+fun String.toUint256() = BigInteger(this.substringAfter("0x"), 16)
+
