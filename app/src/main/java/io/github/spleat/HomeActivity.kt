@@ -21,16 +21,6 @@ class HomeActivity : RxAppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.home_activity)
         yourAddress.text = walletManager.getWallet().address
-        etherPizza.getBalance()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .bindToLifecycle(this)
-                .subscribe({
-                    balance.text = it.toEth().toPlainString()
-                    address.setText("Powstańców Śląskich 7b, 53-332 Wrocław")
-                }, {
-                    Log.e("kasper", it.toString(), it)
-                })
         restaurantChooser.adapter = ArrayAdapter(this, R.layout.support_simple_spinner_dropdown_item, listOf("Bitcoin Burger", "Ether Pizza"))
         createButton.setOnClickListener {
             spleat.executeRx { openOrder(EtherPizzaService.ADDRESS, address.text.toString(), phoneNumber.text.toString()).sendAsync() }
@@ -45,5 +35,19 @@ class HomeActivity : RxAppCompatActivity() {
                         Log.e("kasper", it.toString(), it)
                     })
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        etherPizza.getBalance()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .bindToLifecycle(this)
+                .subscribe({
+                    balance.text = it.toEth().toPlainString()
+                    address.setText("Powstańców Śląskich 7b, 53-332 Wrocław")
+                }, {
+                    Log.e("kasper", it.toString(), it)
+                })
     }
 }

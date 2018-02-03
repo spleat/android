@@ -23,6 +23,6 @@ class EtherPizzaService(private val walletManager: WalletManager,
     }
 
     companion object {
-        val ADDRESS = "0x89e5275771b16388e872e0ed7f1455a7683a0bc9"
+        val ADDRESS = "0xd88e1aa41d7978470bcb511cf8b6c035ad771fbc"
     }
 }

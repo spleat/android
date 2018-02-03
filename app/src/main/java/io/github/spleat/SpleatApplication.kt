@@ -13,7 +13,7 @@ class SpleatApplication : Application() {
         contextProvider = { applicationContext }
         val walletManager = WalletManager(applicationContext)
         walletManagerProvider = { walletManager }
-        val web3 = JsonRpc2_0Web3j(InfuraHttpService("https://rinkeby.infura.io/0ZevQ4HkUCzCVBOsYZcQ"))
+        val web3 = JsonRpc2_0Web3j(InfuraHttpService("https://kovan.infura.io/0ZevQ4HkUCzCVBOsYZcQ"))
         etherPizzaServiceProvider = { EtherPizzaService(walletManager, web3) }
         spleatServiceProvider = { SpleatService(walletManager, web3) }
     }
