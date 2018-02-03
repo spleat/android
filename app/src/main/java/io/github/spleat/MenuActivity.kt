@@ -203,7 +203,7 @@ class MenuActivity : RxAppCompatActivity() {
                 })
     }
 
-    private fun String.toUint256() = BigInteger(this.substringAfter("0x"), 16)
+    private fun String.toUint256() = BigInteger(this.substringAfterLast("0x").substringAfterLast("/"), 16)
 
     private fun addMenuItem(item: MenuItem) {
         spleatService.executeRx { addItem(orderId.toUint256(), item.id, item.price).sendAsync() }
