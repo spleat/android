@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit
 
 class MenuActivity : RxAppCompatActivity() {
 
-    private val orderId by lazy { intent.getStringExtra(ORDER_ID_KEY) }
+    private val orderId by lazy { intent.getStringExtra(ORDER_ID_KEY) ?: intent.data.path }
     private val walletManager by lazy(walletManagerProvider)
     private val menuService: EtherPizzaService by lazy(etherPizzaServiceProvider)
     private val spleatService by lazy(spleatServiceProvider)
@@ -61,7 +61,7 @@ class MenuActivity : RxAppCompatActivity() {
                     menuItemDescription.text = item.menuItem.description
                     menuItemPrice.text = item.menuItem.price.toEth().toPlainString()
                     if (item.owner.toString() == walletManager.getWallet().address) {
-                        setBackgroundColor(resources.getColor(R.color.background_material_dark))
+                        setBackgroundColor(resources.getColor(R.color.yellow))
                     } else {
                         setBackgroundColor(resources.getColor(R.color.background_material_light))
                     }
@@ -71,7 +71,13 @@ class MenuActivity : RxAppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.menu_activity)
-        orderIdView.text = orderId
+        shareOrder.setOnClickListener {
+            val sendIntent = Intent()
+            sendIntent.action = Intent.ACTION_SEND
+            sendIntent.putExtra(Intent.EXTRA_TEXT, "http://sple.at/$orderId")
+            sendIntent.type = "text/plain"
+            startActivity(Intent.createChooser(sendIntent, "http://sple.at/$orderId"))
+        }
         Log.e("kasper", "orderId: $orderId")
         currentOrderRecycler.adapter = currentOrderAdapter
         menuListRecycler.layoutManager = LinearLayoutManager(this, LinearLayout.VERTICAL, false)
