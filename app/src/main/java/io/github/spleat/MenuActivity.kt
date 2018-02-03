@@ -126,11 +126,11 @@ class MenuActivity : RxAppCompatActivity() {
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe {
                     statusView.show()
-                    statusView.text = "pending"
+                    statusView.text = "Status: pending"
                 }
                 .bindToLifecycle(this)
                 .subscribe({
-                    statusView.text = when (it.toInt()) {
+                    statusView.text = "Status: " + when (it.toInt()) {
                         0 -> "pending"
                         1 -> "preparing"
                         2 -> "delivering"
