@@ -40,20 +40,11 @@ class MenuActivity : RxAppCompatActivity() {
                     menuItemDescription.text = item.description
                     menuItemPrice.text = item.price.toEth().toPlainString()
                     menuItemAdd.setOnClickListener {
-                        spleatService.executeRx { addItem(orderId.toUint256(), item.id, item.price).sendAsync() }
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .doOnSubscribe { progressBar.show() }
-                                .doFinally { progressBar.hide() }
-                                .bindToLifecycle(this@MenuActivity)
-                                .subscribe({
-                                    Log.e("kasper", "item dodany")
-                                }, {
-                                    Log.e("kasper", it.toString(), it)
-                                })
+                        addMenuItem(item)
                     }
                 }
             })
+
     private val myAddress = walletManager.getWallet().address
 
     private val currentOrderAdapter = basicAdapterWithLayoutAndBinder(
@@ -62,13 +53,15 @@ class MenuActivity : RxAppCompatActivity() {
             binder = { holder, item ->
                 with(holder.itemView) {
                     currentItemDescription.text = item.menuItem.description
-                    currentItemPrice.text = item.menuItem.price.toEth().toPlainString()
                     if (item.owner.toString() == myAddress) {
                         setBackgroundColor(resources.getColor(R.color.yellow))
                         currentItemRemove.show()
                     } else {
                         currentItemRemove.hide()
                         setBackgroundColor(resources.getColor(R.color.background_material_light))
+                    }
+                    setOnClickListener {
+                        removeMenuItem(item.menuItem)
                     }
                 }
             })
@@ -173,6 +166,34 @@ class MenuActivity : RxAppCompatActivity() {
     }
 
     private fun String.toUint256() = BigInteger(this.substringAfter("0x"), 16)
+
+    private fun addMenuItem(item: MenuItem) {
+        spleatService.executeRx { addItem(orderId.toUint256(), item.id, item.price).sendAsync() }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe { progressBar.show() }
+                .doFinally { progressBar.hide() }
+                .bindToLifecycle(this@MenuActivity)
+                .subscribe({
+                    Log.e("kasper", "item dodany")
+                }, {
+                    Log.e("kasper", it.toString(), it)
+                })
+    }
+
+    private fun removeMenuItem(item: MenuItem) {
+        spleatService.executeRx { removeItem(orderId.toUint256(), item.id).sendAsync() }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe { progressBar.show() }
+                .doFinally { progressBar.hide() }
+                .bindToLifecycle(this@MenuActivity)
+                .subscribe({
+                    Log.e("kasper", "item dodany")
+                }, {
+                    Log.e("kasper", it.toString(), it)
+                })
+    }
 
     companion object {
         fun start(context: Context, orderId: String) {

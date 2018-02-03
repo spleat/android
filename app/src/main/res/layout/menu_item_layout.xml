@@ -3,24 +3,32 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:orientation="horizontal">
 
-    <TextView
-        tools:text="Pizza hawajska"
-        android:id="@+id/menuItemDescription"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="horizontal">
 
-    <TextView
-        tools:text="100 ETH"
-        android:id="@+id/menuItemPrice"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/menuItemDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="Pizza hawajska" />
+
+        <TextView
+            android:id="@+id/menuItemPrice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="100 ETH" />
+
+    </LinearLayout>
 
     <Button
-        android:text="+"
         android:id="@+id/menuItemAdd"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:text="+" />
 
 </LinearLayout>
