@@ -11,7 +11,9 @@ import com.elpassion.android.view.hide
 import com.elpassion.android.view.show
 import com.trello.rxlifecycle2.components.support.RxAppCompatActivity
 import com.trello.rxlifecycle2.kotlin.bindToLifecycle
+import io.reactivex.BackpressureStrategy
 import io.reactivex.Flowable
+import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.menu_activity.*
@@ -74,29 +76,39 @@ class MenuActivity : RxAppCompatActivity() {
         currentOrderRecycler.adapter = currentOrderAdapter
         menuListRecycler.layoutManager = LinearLayoutManager(this, LinearLayout.VERTICAL, false)
         currentOrderRecycler.layoutManager = LinearLayoutManager(this, LinearLayout.VERTICAL, false)
-        menuService.executeRx { menuLength().sendAsync() }
+        menuListRecycler.adapter = menuAdapter
+        fetchMenuItems()
+        subscribeToCurrentOrderChanges()
+        closeOrder.setOnClickListener {
+            closeOrderAndSubscribeToStatusChanges()
+        }
+    }
+
+    private fun closeOrderAndSubscribeToStatusChanges() {
+        spleatService.executeRx { makeOrder(orderId.toUint256()).sendAsync() }
                 .subscribeOn(Schedulers.io())
-                .flatMapIterable { (0..(it.toLong() - 1)).toList() }
-                .doOnNext { Log.e("kasper", "calling $it") }
-                .flatMap { menuService.executeRx { menuItem(BigInteger.valueOf(it)).sendAsync() } }
-                .map { MenuItem(it.value1, it.value2.toString(), it.value3) }
-                .toList()
+                .flatMap { Observable.interval(5, TimeUnit.SECONDS) }
+                .toFlowable(BackpressureStrategy.DROP)
+                .toObservable()
+                .flatMap { spleatService.executeRx { restaurantOrderStatus(orderId.toUint256()).sendAsync() } }
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe {
-                    progressBar.show()
-                }
-                .doFinally {
-                    progressBar.hide()
-                }
                 .bindToLifecycle(this)
                 .subscribe({
-                    menuAdapter.items = it
-                    menuAdapter.notifyDataSetChanged()
+                    closeOrder.hide()
+                    statusView.show()
+                    statusView.text = when (it.toInt()) {
+                        0 -> "pending"
+                        1 -> "preparing"
+                        2 -> "delivering"
+                        3 -> "delivered"
+                        else -> "rejected"
+                    }
                 }, {
                     Log.e("kasper", it.toString(), it)
                 })
-        menuListRecycler.adapter = menuAdapter
+    }
 
+    private fun subscribeToCurrentOrderChanges() {
         Flowable.interval(5, TimeUnit.SECONDS)
                 .subscribeOn(Schedulers.io())
                 .onBackpressureDrop()
@@ -118,8 +130,31 @@ class MenuActivity : RxAppCompatActivity() {
                 })
     }
 
-    private fun String.toUint256() = BigInteger(this.drop(2), 16)
+    private fun fetchMenuItems() {
+        menuService.executeRx { menuLength().sendAsync() }
+                .subscribeOn(Schedulers.io())
+                .flatMapIterable { (0..(it.toLong() - 1)).toList() }
+                .doOnNext { Log.e("kasper", "calling $it") }
+                .flatMap { menuService.executeRx { menuItem(BigInteger.valueOf(it)).sendAsync() } }
+                .map { MenuItem(it.value1, it.value2.toString(), it.value3) }
+                .toList()
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe {
+                    progressBar.show()
+                }
+                .doFinally {
+                    progressBar.hide()
+                }
+                .bindToLifecycle(this)
+                .subscribe({
+                    menuAdapter.items = it
+                    menuAdapter.notifyDataSetChanged()
+                }, {
+                    Log.e("kasper", it.toString(), it)
+                })
+    }
 
+    private fun String.toUint256() = BigInteger(this.drop(2), 16)
 
     companion object {
         fun start(context: Context, orderId: String) {
