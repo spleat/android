@@ -7,19 +7,19 @@
 
     <TextView
         tools:text="Pizza hawajska"
-        android:id="@+id/menuItemDescription"
+        android:id="@+id/currentItemDescription"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
     <TextView
         tools:text="100 ETH"
-        android:id="@+id/menuItemPrice"
+        android:id="@+id/currentItemPrice"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
     <Button
         android:text="-"
-        android:id="@+id/menuItemAdd"
+        android:id="@+id/currentItemRemove"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 

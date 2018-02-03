@@ -13,8 +13,10 @@
 
         <Button
             android:id="@+id/shareOrder"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:text="Share" />
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/menuListRecycler"
@@ -22,6 +24,10 @@
             android:layout_height="0dp"
             android:layout_weight="1" />
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#000000" />
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/currentOrderRecycler"
@@ -37,9 +43,9 @@
 
         <TextView
             android:id="@+id/statusView"
-            android:textSize="20sp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:textSize="20sp"
             android:textStyle="bold" />
 
     </LinearLayout>

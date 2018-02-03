@@ -16,6 +16,7 @@ import io.reactivex.Flowable
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import kotlinx.android.synthetic.main.current_item_layout.view.*
 import kotlinx.android.synthetic.main.menu_activity.*
 import kotlinx.android.synthetic.main.menu_item_layout.view.*
 import org.web3j.abi.datatypes.Address
@@ -58,11 +59,13 @@ class MenuActivity : RxAppCompatActivity() {
             layout = R.layout.current_item_layout,
             binder = { holder, item ->
                 with(holder.itemView) {
-                    menuItemDescription.text = item.menuItem.description
-                    menuItemPrice.text = item.menuItem.price.toEth().toPlainString()
+                    currentItemDescription.text = item.menuItem.description
+                    currentItemPrice.text = item.menuItem.price.toEth().toPlainString()
                     if (item.owner.toString() == walletManager.getWallet().address) {
                         setBackgroundColor(resources.getColor(R.color.yellow))
+                        currentItemRemove.show()
                     } else {
+                        currentItemRemove.hide()
                         setBackgroundColor(resources.getColor(R.color.background_material_light))
                     }
                 }

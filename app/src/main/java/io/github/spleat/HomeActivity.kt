@@ -31,7 +31,7 @@ class HomeActivity : RxAppCompatActivity() {
                 }, {
                     Log.e("kasper", it.toString(), it)
                 })
-        restaurantChooser.adapter = ArrayAdapter(this, R.layout.support_simple_spinner_dropdown_item, listOf("Ether Pizza", "Dominos"))
+        restaurantChooser.adapter = ArrayAdapter(this, R.layout.support_simple_spinner_dropdown_item, listOf("Bitcoin Burger", "Ether Pizza"))
         createButton.setOnClickListener {
             spleat.executeRx { openOrder(EtherPizzaService.ADDRESS, address.text.toString(), phoneNumber.text.toString()).sendAsync() }
                     .subscribeOn(Schedulers.io())
