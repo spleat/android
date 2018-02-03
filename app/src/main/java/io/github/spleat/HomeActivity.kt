@@ -23,18 +23,22 @@ class HomeActivity : RxAppCompatActivity() {
         val address = walletManager.getWallet().address
         restaurantChooser.adapter = ArrayAdapter(this, R.layout.spinner_item, listOf("Bitcoin Burger", "Ether Pizza"))
         createButton.setOnClickListener {
-            spleat.executeRx { openOrder(EtherPizzaService.ADDRESS, address, phoneNumber.text.toString()).sendAsync() }
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .doOnSubscribe { progressBar.show() }
-                    .doFinally { progressBar.hide() }
-                    .bindToLifecycle(this)
-                    .subscribe({
-                        MenuActivity.start(this, it.logs[0].topics[1].toUint256(), address)
-                    }, {
-                        Log.e("kasper", it.toString(), it)
-                    })
+            createButton.hide()
+            progressBar.show()
+            createOrder(address)
         }
+    }
+
+    private fun createOrder(address: String) {
+        spleat.executeRx { openOrder(EtherPizzaService.ADDRESS, address, phoneNumber.text.toString()).sendAsync() }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .bindToLifecycle(this)
+                .subscribe({
+                    MenuActivity.start(this, it.logs[0].topics[1].toUint256(), address)
+                }, {
+                    Log.e("kasper", it.toString(), it)
+                })
     }
 
     override fun onResume() {
