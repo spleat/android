@@ -30,7 +30,7 @@ class HomeActivity : RxAppCompatActivity() {
     }
 
     private fun createOrder(address: String) {
-        spleat.executeRx { openOrder(EtherPizzaService.ADDRESS, address, phoneNumber.text.toString()).sendAsync() }
+        spleat.executeRx { openOrder(EtherPizzaService.ADDRESS, addressView.text.toString(), phoneNumber.text.toString()).sendAsync() }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .bindToLifecycle(this)
@@ -49,7 +49,7 @@ class HomeActivity : RxAppCompatActivity() {
                 .bindToLifecycle(this)
                 .subscribe({
                     balance.text = it.toEth().toPlainString() + " ETH"
-                    address.setText("Powstańców Śląskich 7b, 53-332 Wrocław")
+                    addressView.setText("Powstańców Śląskich 7b, 53-332 Wrocław")
                 }, {
                     Log.e("kasper", it.toString(), it)
                 })
