@@ -20,17 +20,18 @@ class HomeActivity : RxAppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.home_activity)
-        yourAddress.text = walletManager.getWallet().address
+        val address = walletManager.getWallet().address
+        yourAddress.text = address
         restaurantChooser.adapter = ArrayAdapter(this, R.layout.support_simple_spinner_dropdown_item, listOf("Bitcoin Burger", "Ether Pizza"))
         createButton.setOnClickListener {
-            spleat.executeRx { openOrder(EtherPizzaService.ADDRESS, address.text.toString(), phoneNumber.text.toString()).sendAsync() }
+            spleat.executeRx { openOrder(EtherPizzaService.ADDRESS, address, phoneNumber.text.toString()).sendAsync() }
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .doOnSubscribe { progressBar.show() }
                     .doFinally { progressBar.hide() }
                     .bindToLifecycle(this)
                     .subscribe({
-                        MenuActivity.start(this, it.logs[0].topics[1])
+                        MenuActivity.start(this, it.logs[0].topics[1], address)
                     }, {
                         Log.e("kasper", it.toString(), it)
                     })

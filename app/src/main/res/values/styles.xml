@@ -7,5 +7,15 @@
         <item name="colorPrimaryDark">#6200ee</item>
         <item name="colorAccent">@color/colorAccent</item>
     </style>
+    <style name="AppTheme3" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
 
+    <style name="AppTheme2" parent="AppTheme3">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">#6200ee</item>
+        <item name="colorPrimaryDark">#6200ee</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
 </resources>

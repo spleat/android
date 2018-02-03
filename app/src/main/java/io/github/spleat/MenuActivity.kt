@@ -38,14 +38,14 @@ class MenuActivity : RxAppCompatActivity() {
             binder = { holder, item ->
                 with(holder.itemView) {
                     menuItemDescription.text = item.description
-                    menuItemPrice.text = item.price.toEth().toPlainString()
+                    menuItemPrice.text = item.price.toEth().toPlainString().trimEnd('0') + " ETH"
                     menuItemAdd.setOnClickListener {
                         addMenuItem(item)
                     }
                 }
             })
 
-    private val myAddress = walletManager.getWallet().address
+    private val myAddress by lazy { intent.getStringExtra(ADDRESS_KEY) ?: walletManager.getWallet().address }
 
     private val currentOrderAdapter = basicAdapterWithLayoutAndBinder(
             items = emptyList<OwnerableMenuItem>(),
@@ -60,7 +60,7 @@ class MenuActivity : RxAppCompatActivity() {
                         currentItemRemove.hide()
                         setBackgroundColor(resources.getColor(R.color.background_material_light))
                     }
-                    setOnClickListener {
+                    currentItemRemove.setOnClickListener {
                         removeMenuItem(item.menuItem)
                     }
                 }
@@ -69,6 +69,12 @@ class MenuActivity : RxAppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.menu_activity)
+        setSupportActionBar(toolbar)
+        supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+        supportActionBar!!.setHomeButtonEnabled(true)
+        val title = "EtherPizza - order"
+        supportActionBar!!.title = title
+        toolbar.title = title
         shareOrder.setOnClickListener {
             val sendIntent = Intent()
             sendIntent.action = Intent.ACTION_SEND
@@ -88,16 +94,25 @@ class MenuActivity : RxAppCompatActivity() {
         }
     }
 
+    override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            return true
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
     private fun closeOrderAndSubscribeToStatusChanges() {
         spleatService.executeRx { makeOrder(orderId.toUint256()).sendAsync() }
                 .subscribeOn(Schedulers.io())
-                .flatMap { Observable.interval(5, TimeUnit.SECONDS) }
+                .flatMap { Observable.interval(2, TimeUnit.SECONDS) }
                 .toFlowable(BackpressureStrategy.DROP)
                 .toObservable()
                 .flatMap { spleatService.executeRx { restaurantOrderStatus(orderId.toUint256()).sendAsync() } }
                 .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe { progressBar.show() }
                 .bindToLifecycle(this)
                 .subscribe({
+                    progressBar.hide()
                     closeOrder.hide()
                     statusView.show()
                     statusView.text = when (it.toInt()) {
@@ -113,15 +128,19 @@ class MenuActivity : RxAppCompatActivity() {
     }
 
     private fun subscribeToCurrentOrderChanges() {
-        Flowable.interval(5, TimeUnit.SECONDS)
+        Flowable.interval(2, TimeUnit.SECONDS)
                 .subscribeOn(Schedulers.io())
                 .onBackpressureDrop()
                 .toObservable()
                 .flatMap { spleatService.executeRx { orderById(orderId.toUint256()).sendAsync() } }
                 .map { a: Tuple4<MutableList<BigInteger>, MutableList<String>, Boolean, String> ->
-                    val cos = a as Tuple4<MutableList<Uint256>, MutableList<Address>, Boolean, String>
-                    val isOwner = cos.value4 == myAddress && cos.value1.isNotEmpty()
-                    cos.value1.zip(cos.value2).map { i -> OwnerableMenuItem(i.second, menuAdapter.items.single { Uint256(it.id) == i.first }) } to isOwner
+                    try {
+                        val cos = a as Tuple4<MutableList<Uint256>, MutableList<Address>, Boolean, String>
+                        val isOwner = cos.value4 == myAddress && cos.value1.isNotEmpty()
+                        cos.value1.zip(cos.value2).map { i -> OwnerableMenuItem(i.second, menuAdapter.items.single { Uint256(it.id) == i.first }) } to isOwner
+                    } catch (ex: Exception) {
+                        emptyList<OwnerableMenuItem>() to false
+                    }
                 }
                 .distinctUntilChanged()
                 .observeOn(AndroidSchedulers.mainThread())
@@ -132,6 +151,7 @@ class MenuActivity : RxAppCompatActivity() {
                     } else {
                         closeOrder.hide()
                     }
+                    progressBar.hide()
                     Log.e("kasper", "ok $it")
                     currentOrderAdapter.items = it
                     currentOrderAdapter.notifyDataSetChanged()
@@ -196,12 +216,14 @@ class MenuActivity : RxAppCompatActivity() {
     }
 
     companion object {
-        fun start(context: Context, orderId: String) {
+        fun start(context: Context, orderId: String, address: String) {
             context.startActivity(Intent(context, MenuActivity::class.java)
-                    .putExtra(ORDER_ID_KEY, orderId))
+                    .putExtra(ORDER_ID_KEY, orderId)
+                    .putExtra(ADDRESS_KEY, address))
         }
 
         private const val ORDER_ID_KEY = "orderId"
+        private const val ADDRESS_KEY = "address"
     }
 }
 
