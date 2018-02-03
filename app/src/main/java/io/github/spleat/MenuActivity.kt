@@ -54,11 +54,9 @@ class MenuActivity : RxAppCompatActivity() {
                 with(holder.itemView) {
                     currentItemDescription.text = item.menuItem.description
                     if (item.owner.toString() == myAddress) {
-                        setBackgroundColor(resources.getColor(R.color.yellow))
                         currentItemRemove.show()
                     } else {
                         currentItemRemove.hide()
-                        setBackgroundColor(resources.getColor(R.color.background_material_light))
                     }
                     currentItemRemove.setOnClickListener {
                         removeMenuItem(item.menuItem)

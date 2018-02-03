@@ -21,8 +21,7 @@ class HomeActivity : RxAppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.home_activity)
         val address = walletManager.getWallet().address
-        yourAddress.text = address
-        restaurantChooser.adapter = ArrayAdapter(this, R.layout.support_simple_spinner_dropdown_item, listOf("Bitcoin Burger", "Ether Pizza"))
+        restaurantChooser.adapter = ArrayAdapter(this, R.layout.spinner_item, listOf("Bitcoin Burger", "Ether Pizza"))
         createButton.setOnClickListener {
             spleat.executeRx { openOrder(EtherPizzaService.ADDRESS, address, phoneNumber.text.toString()).sendAsync() }
                     .subscribeOn(Schedulers.io())
@@ -45,7 +44,7 @@ class HomeActivity : RxAppCompatActivity() {
                 .observeOn(AndroidSchedulers.mainThread())
                 .bindToLifecycle(this)
                 .subscribe({
-                    balance.text = it.toEth().toPlainString()
+                    balance.text = it.toEth().toPlainString() + " ETH"
                     address.setText("Powstańców Śląskich 7b, 53-332 Wrocław")
                 }, {
                     Log.e("kasper", it.toString(), it)

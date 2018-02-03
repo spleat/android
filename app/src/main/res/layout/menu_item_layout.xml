@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_marginTop="16dp"
     android:orientation="horizontal">
 
     <LinearLayout
@@ -15,20 +17,23 @@
             android:id="@+id/menuItemDescription"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:textSize="18sp"
             tools:text="Pizza hawajska" />
 
         <TextView
             android:id="@+id/menuItemPrice"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:textSize="16sp"
             tools:text="100 ETH" />
 
     </LinearLayout>
 
-    <Button
+    <android.support.design.widget.FloatingActionButton
         android:id="@+id/menuItemAdd"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="+" />
+        android:src="@drawable/ic_add_black_24dp"
+        app:fabSize="mini" />
 
 </LinearLayout>

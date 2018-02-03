@@ -42,6 +42,12 @@
             android:orientation="vertical"
             android:weightSum="2">
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Menu"
+                android:textSize="20sp"
+                android:textStyle="bold" />
 
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/menuListRecycler"
@@ -54,6 +60,13 @@
                 android:layout_height="1dp"
                 android:background="#000000" />
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Order"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/currentOrderRecycler"
                 android:layout_width="match_parent"
@@ -62,6 +75,7 @@
 
             <Button
                 android:id="@+id/closeOrder"
+                style="@style/Widget.AppCompat.Button.Colored"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Close order"
@@ -77,6 +91,7 @@
         </LinearLayout>
 
         <ProgressBar
+            android:layout_marginBottom="100dp"
             android:id="@+id/progressBar"
             android:layout_width="40dp"
             android:layout_height="40dp"
