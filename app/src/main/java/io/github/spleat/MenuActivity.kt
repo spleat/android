@@ -21,7 +21,7 @@ import kotlinx.android.synthetic.main.menu_activity.*
 import kotlinx.android.synthetic.main.menu_item_layout.view.*
 import org.web3j.abi.datatypes.Address
 import org.web3j.abi.datatypes.generated.Uint256
-import org.web3j.tuples.generated.Tuple3
+import org.web3j.tuples.generated.Tuple4
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.concurrent.TimeUnit
@@ -54,6 +54,8 @@ class MenuActivity : RxAppCompatActivity() {
                     }
                 }
             })
+    private val myAddress = walletManager.getWallet().address
+
     private val currentOrderAdapter = basicAdapterWithLayoutAndBinder(
             items = emptyList<OwnerableMenuItem>(),
             layout = R.layout.current_item_layout,
@@ -61,7 +63,7 @@ class MenuActivity : RxAppCompatActivity() {
                 with(holder.itemView) {
                     currentItemDescription.text = item.menuItem.description
                     currentItemPrice.text = item.menuItem.price.toEth().toPlainString()
-                    if (item.owner.toString() == walletManager.getWallet().address) {
+                    if (item.owner.toString() == myAddress) {
                         setBackgroundColor(resources.getColor(R.color.yellow))
                         currentItemRemove.show()
                     } else {
@@ -123,13 +125,20 @@ class MenuActivity : RxAppCompatActivity() {
                 .onBackpressureDrop()
                 .toObservable()
                 .flatMap { spleatService.executeRx { orderById(orderId.toUint256()).sendAsync() } }
-                .map { a: Tuple3<MutableList<BigInteger>, MutableList<String>, Boolean> ->
-                    val cos = a as Tuple3<MutableList<Uint256>, MutableList<Address>, Boolean>
-                    cos.value1.zip(cos.value2).map { i -> OwnerableMenuItem(i.second, menuAdapter.items.single { Uint256(it.id) == i.first }) }
+                .map { a: Tuple4<MutableList<BigInteger>, MutableList<String>, Boolean, String> ->
+                    val cos = a as Tuple4<MutableList<Uint256>, MutableList<Address>, Boolean, String>
+                    val isOwner = cos.value4 == myAddress && cos.value1.isNotEmpty()
+                    cos.value1.zip(cos.value2).map { i -> OwnerableMenuItem(i.second, menuAdapter.items.single { Uint256(it.id) == i.first }) } to isOwner
                 }
+                .distinctUntilChanged()
                 .observeOn(AndroidSchedulers.mainThread())
                 .bindToLifecycle(this)
-                .subscribe({
+                .subscribe({ (it, isOwner) ->
+                    if (isOwner && it.isNotEmpty()) {
+                        closeOrder.show()
+                    } else {
+                        closeOrder.hide()
+                    }
                     Log.e("kasper", "ok $it")
                     currentOrderAdapter.items = it
                     currentOrderAdapter.notifyDataSetChanged()
@@ -163,7 +172,7 @@ class MenuActivity : RxAppCompatActivity() {
                 })
     }
 
-    private fun String.toUint256() = BigInteger(this.drop(2), 16)
+    private fun String.toUint256() = BigInteger(this.substringAfter("0x"), 16)
 
     companion object {
         fun start(context: Context, orderId: String) {

@@ -11,7 +11,7 @@ class SpleatService(private val walletManager: WalletManager,
                     private val web3: JsonRpc2_0Web3j) {
 
     fun <T> executeRx(f: Spleat.() -> Future<out T>): Observable<out T> {
-        return Observable.fromCallable { Spleat.load("0x5a00169fc88d30714eb16fda1a0acf53a92fb508", web3, walletManager.getWallet(), ManagedTransaction.GAS_PRICE, Contract.GAS_LIMIT) }
+        return Observable.fromCallable { Spleat.load("0x21493442dceb6a74068be83a35dda0b7afc7abff", web3, walletManager.getWallet(), ManagedTransaction.GAS_PRICE, Contract.GAS_LIMIT) }
                 .flatMap { Observable.fromFuture(f(it)) }
     }
 }

@@ -29,16 +29,16 @@ contract Spleat {
         uint256[] items;
         address[] buyers;
         uint256[] itemPayment;
-        uint256 payed;
+        uint256 paid;
         bool ordered;
         uint256 restaurantOrderId;
     }
 
     mapping (uint256 => Order) public orders;
 
-    function orderById(uint256 orderId) public view returns (uint256[], address[], bool) {
+    function orderById(uint256 orderId) public view returns (uint256[], address[], bool, address) {
         var o = orders[orderId];
-        return (o.items, o.buyers, o.ordered);
+        return (o.items, o.buyers, o.ordered, o.owner);
     }
 
     event OrderOpened(uint256 indexed orderId);
@@ -58,7 +58,7 @@ contract Spleat {
         o.buyers[o.buyers.length - 1] = msg.sender;
         o.itemPayment.length++;
         o.itemPayment[o.itemPayment.length - 1] = msg.value;
-        o.payed += msg.value;
+        o.paid += msg.value;
     }
 
     modifier checkPayment(uint256 orderId, uint256 id) {
@@ -74,9 +74,11 @@ contract Spleat {
                 if (i != o.items.length - 1) {
                     o.items[i] = o.items[o.items.length - 1];
                     o.buyers[i] = o.buyers[o.buyers.length - 1];
+                    o.itemPayment[i] = o.itemPayment[o.itemPayment.length - 1];
                 }
                 o.items.length--;
                 o.buyers.length--;
+                o.itemPayment.length--;
                 break;
             }
         }
@@ -97,7 +99,7 @@ contract Spleat {
 
     function makeOrder(uint256 orderId) public onlyOwner(orderId) notOrdered(orderId) {
         var o = orders[orderId];
-        var restaurantOrderId = o.restaurant.order.value(o.payed)(o.deliveryAddress, o.phone, o.items);
+        var restaurantOrderId = o.restaurant.order.value(o.paid)(o.deliveryAddress, o.phone, o.items);
         o.restaurantOrderId = restaurantOrderId;
         o.ordered = true;
     }
